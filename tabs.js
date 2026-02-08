@@ -1,6 +1,6 @@
 class TabsView extends HTMLElement {
   static get observedAttributes() { return ['orientation', 'active-id']; }
-  // test
+  // testd
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
