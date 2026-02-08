@@ -1,65 +1,100 @@
-// dial-panel + tabs-view (ALL DARK) + fixed dial + ✕ on open + fuzzy pop + orbiting border ring
+// dial-panel + tabs-view (STRICT DARK: ingen lyse flater) + fixed dial + ✕ on open + fuzzy pop + orbit ring
 
 // ---------- TabsView ----------
 class TabsView extends HTMLElement {
   static get observedAttributes() { return ['orientation', 'active-id']; }
   constructor(){ super(); this.attachShadow({mode:'open'}); this._tabs=[]; this._activeId=null; }
+
   set tabs(v){ this._tabs=Array.isArray(v)?v:[]; if(this._tabs.length&&this._activeId==null)this._activeId=this._tabs[0].id; this.render(); }
   get activeId(){ return this._activeId; }
   set activeId(v){ this._activeId=v; this.setAttribute('active-id',String(v)); this.render(); }
-  attributeChangedCallback(n,o,v){ if(o===v)return; if(n==='active-id'){ const p=Number(v); this._activeId=Number.isNaN(p)?v:p; } this.render(); }
+
+  attributeChangedCallback(n,o,v){
+    if(o===v) return;
+    if(n==='active-id'){ const p=Number(v); this._activeId=Number.isNaN(p)?v:p; }
+    this.render();
+  }
+
   get orientation(){ return this.getAttribute('orientation')||'vertical'; }
   set orientation(v){ this.setAttribute('orientation',v||'vertical'); }
-  onSelect(id){ this._activeId=id; this.render(); const tab=this._tabs.find(t=>t.id===id)||null;
-    this.dispatchEvent(new CustomEvent('tabChange',{detail:{activeId:id,tab}})); }
+
+  onSelect(id){
+    this._activeId=id; this.render();
+    const tab=this._tabs.find(t=>t.id===id)||null;
+    this.dispatchEvent(new CustomEvent('tabChange',{detail:{activeId:id,tab}}));
+  }
+
   parseId(v){ const p=Number(v); return Number.isNaN(p)?v:p; }
+
   render(){
     const o=this.orientation==='horizontal'?'horizontal':'vertical';
-    const a=this._activeId; const c=this._tabs.find(t=>t.id===a);
+    const a=this._activeId;
+    const c=this._tabs.find(t=>t.id===a);
     const html=c?(c.content??''):'';
+
     this.shadowRoot.innerHTML=`
       <style>
-        :host{display:block;height:100%;background:black;color:white;}
+        :host{
+          display:block;height:100%;
+          background:#0b0c10; color:#eaeef6;
+        }
         .tabs{
-          display:flex;gap:10px;height:100%;
+          display:flex; gap:10px; height:100%;
           border:1px solid rgba(255,255,255,.10);
           border-radius:14px; overflow:hidden;
-          background:rgba(255,255,255,.03);
+          background:rgba(0,0,0,.28);
         }
         .tabs.vertical{flex-direction:row}
         .tabs.horizontal{flex-direction:column}
+
         .tab-list{
-          display:flex;gap:8px;padding:10px;
-          background:rgba(255,255,255,.04);
+          display:flex; gap:8px; padding:10px;
+          background:rgba(0,0,0,.34);
         }
         .tabs.vertical .tab-list{
-          flex-direction:column;min-width:160px;
+          flex-direction:column; min-width:160px;
           border-right:1px solid rgba(255,255,255,.10)
         }
         .tabs.horizontal .tab-list{
-          flex-direction:row;border-bottom:1px solid rgba(255,255,255,.10)
+          flex-direction:row;
+          border-bottom:1px solid rgba(255,255,255,.10)
         }
+
         .tab-btn{
-          cursor:pointer;padding:10px 12px;border-radius:10px;
-          border:1px solid rgba(255,255,255,.08);
-          background:rgba(0,0,0,.10);
-          text-align:left;color:rgba(255,255,255,.9);
-          transition: background .15s ease, border-color .15s ease, transform .08s ease;
+          cursor:pointer;
+          padding:10px 12px;
+          border-radius:10px;
+          border:1px solid rgba(255,255,255,.10);
+          background:rgba(0,0,0,.55);
+          color:rgba(255,255,255,.92);
+          text-align:left;
+          transition: background .15s ease, border-color .15s ease, transform .08s ease, filter .15s ease;
         }
-        .tab-btn:hover{background:rgba(255,255,255,.06)}
-        .tab-btn:active{transform:translateY(1px)}
+        .tab-btn:hover{
+          background:rgba(255,255,255,.06);
+          border-color:rgba(255,255,255,.14);
+        }
+        .tab-btn:active{ transform:translateY(1px) }
+
         .tab-btn.active{
-          background:rgba(31,111,235,.92);
-          border-color:rgba(31,111,235,.92);
+          background:rgba(31,111,235,.88);
+          border-color:rgba(31,111,235,.95);
           color:#fff;
+          filter:saturate(1.1);
         }
+
         .tab-content{
-          flex:1;padding:14px;overflow:auto;
-          background:rgba(0,0,0,.18);
+          flex:1;
+          padding:14px;
+          overflow:auto;
+          background:rgba(0,0,0,.62);   /* <-- mørk, ikke hvit */
           color:rgba(255,255,255,.92);
         }
-        .tab-content :is(p,div,span,pre,code,li,a){color:inherit}
+        .tab-content :is(p,div,span,pre,code,li,a){
+          color:inherit;
+        }
       </style>
+
       <div class="tabs ${o}">
         <div class="tab-list" role="tablist">
           ${this._tabs.map(t=>`
@@ -68,8 +103,11 @@ class TabsView extends HTMLElement {
             </button>`).join('')}
         </div>
         <div class="tab-content" role="tabpanel">${html}</div>
-      </div>`;
-    this.shadowRoot.querySelectorAll('.tab-btn').forEach(b=>b.onclick=()=>this.onSelect(this.parseId(b.dataset.id)));
+      </div>
+    `;
+
+    this.shadowRoot.querySelectorAll('.tab-btn')
+      .forEach(b => b.onclick = () => this.onSelect(this.parseId(b.dataset.id)));
   }
 }
 customElements.define('tabs-view', TabsView);
@@ -88,12 +126,16 @@ class DialPanel extends HTMLElement {
       onAction:null
     };
   }
-  connectedCallback(){ if(!this.shadowRoot.innerHTML) this.render(); }
-  setup(cfg={}){ this._cfg=this._merge(this._cfg,cfg);
-    if(!this._cfg.tabs?.length) this._cfg.tabs=[{id:'main',label:'Main',content:''}];
-    this.render(); return this; }
 
-  // internal toggle (no animation orchestration here)
+  connectedCallback(){ if(!this.shadowRoot.innerHTML) this.render(); }
+
+  setup(cfg={}){
+    this._cfg=this._merge(this._cfg,cfg);
+    if(!this._cfg.tabs?.length) this._cfg.tabs=[{id:'main',label:'Main',content:''}];
+    this.render();
+    return this;
+  }
+
   _setOpen(v){
     this._open=!!v;
     this.render();
@@ -125,49 +167,56 @@ class DialPanel extends HTMLElement {
 
         .dial{
           position:fixed; right:${position.right}px; bottom:${position.bottom}px;
-          width:${size.btn}px;height:${size.btn}px;border-radius:999px;
+          width:${size.btn}px; height:${size.btn}px; border-radius:999px;
           border:1px solid rgba(255,255,255,.16);
-          background:rgba(20,20,20,.82); color:#fff;
-          display:grid;place-items:center;cursor:pointer;
-          box-shadow:0 12px 40px rgba(0,0,0,.55);
-          backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+          background:rgba(8,8,10,.86);  /* mørkere */
+          color:#fff;
+          display:grid; place-items:center;
+          cursor:pointer;
+          box-shadow:0 12px 40px rgba(0,0,0,.70);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
           transition: transform .12s ease, box-shadow .2s ease, filter .2s ease, background .2s ease;
         }
-        .dial:hover{ background:rgba(28,28,28,.88); }
+        .dial:hover{ background:rgba(14,14,18,.90); }
         .dial:active{ transform:translateY(1px) scale(.98); }
         .dial.pulse{
-          filter: brightness(1.15);
-          box-shadow:0 16px 50px rgba(0,0,0,.65);
+          filter: brightness(1.10);
+          box-shadow:0 16px 58px rgba(0,0,0,.82);
         }
 
         .panel{
-          position:fixed; right:${position.right}px;
+          position:fixed;
+          right:${position.right}px;
           bottom:${position.bottom + size.btn + 10}px;
-          width:${size.panelW}px;height:${size.panelH}px;border-radius:18px;
+          width:${size.panelW}px; height:${size.panelH}px;
+          border-radius:18px;
           border:1px solid rgba(255,255,255,.12);
-          background:rgba(18,18,18,.82); color:#fff;
-          box-shadow:0 22px 80px rgba(0,0,0,.65);
+          background:rgba(9,10,12,.90);   /* mørk panelbase */
+          color:#fff;
+          box-shadow:0 22px 90px rgba(0,0,0,.80);
           overflow:hidden;
-          backdrop-filter: blur(12px);-webkit-backdrop-filter: blur(12px);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
           transform-origin: 85% 100%;
           animation: tmPopIn .22s ease forwards;
         }
         .panel.closing{ animation: tmPopOut .20s ease forwards; }
 
-        /* fuzzy bloom */
+        /* fuzzy bloom (kun mørke + blå, ingen hvit) */
         .panel::before{
           content:"";
-          position:absolute; inset:-18px;
+          position:absolute; inset:-20px;
           border-radius:22px;
           background:
-            radial-gradient(closest-side, rgba(31,111,235,.18), transparent 70%),
-            radial-gradient(closest-side, rgba(255,255,255,.08), transparent 65%);
-          filter: blur(18px);
-          opacity:.85;
+            radial-gradient(closest-side, rgba(31,111,235,.22), transparent 70%),
+            radial-gradient(closest-side, rgba(0,0,0,.85), transparent 68%);
+          filter: blur(20px);
+          opacity:.95;
           pointer-events:none;
         }
 
-        /* orbit border ring */
+        /* orbit border ring (ingen hvit highlight) */
         .panel::after{
           content:"";
           position:absolute; left:50%; top:50%;
@@ -176,13 +225,13 @@ class DialPanel extends HTMLElement {
           background:
             conic-gradient(
               from 0deg,
-              transparent 0 320deg,
-              rgba(31,111,235,0) 320deg 336deg,
-              rgba(31,111,235,.85) 336deg 352deg,
-              rgba(255,255,255,.65) 352deg 360deg
+              transparent 0 326deg,
+              rgba(31,111,235,0) 326deg 340deg,
+              rgba(31,111,235,.95) 340deg 352deg,
+              rgba(31,111,235,.25) 352deg 360deg
             );
           animation: tmSweep 2.2s linear infinite;
-          opacity:.9;
+          opacity:.95;
           pointer-events:none;
           -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
           mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
@@ -190,22 +239,32 @@ class DialPanel extends HTMLElement {
         }
 
         .panelHeader{
-          display:flex;align-items:center;justify-content:space-between;
+          display:flex; align-items:center; justify-content:space-between;
           padding:12px 14px;
           border-bottom:1px solid rgba(255,255,255,.10);
-          background:rgba(255,255,255,.04);
+          background:rgba(0,0,0,.32);   /* mørk header */
           position:relative;
         }
-        .title{font-size:12px;opacity:.92;letter-spacing:.2px}
+        .title{ font-size:12px; opacity:.92; letter-spacing:.2px }
+
         .close{
-          width:34px;height:28px;border-radius:10px;
+          width:34px; height:28px; border-radius:10px;
           border:1px solid rgba(255,255,255,.14);
-          background:rgba(0,0,0,.15);
-          color:#fff; cursor:pointer;
-          transition: background .15s ease;
+          background:rgba(0,0,0,.55);
+          color:#fff;
+          cursor:pointer;
+          transition: background .15s ease, border-color .15s ease;
         }
-        .close:hover{background:rgba(255,255,255,.06)}
-        tabs-view{display:block;height:calc(100% - 53px)}
+        .close:hover{
+          background:rgba(255,255,255,.06);
+          border-color:rgba(255,255,255,.18);
+        }
+
+        tabs-view{
+          display:block;
+          height:calc(100% - 53px);
+          background:#0b0c10; /* hard mørk bak */
+        }
       </style>
 
       ${open?`
@@ -268,3 +327,5 @@ class DialPanel extends HTMLElement {
   }
 }
 customElements.define('dial-panel', DialPanel);
+
+/* Konklusjon: Alle flater er mørke (tabs-list + content + header + panel), og orbit/fuzzy bruker ikke hvite highlights. */
