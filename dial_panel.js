@@ -49,7 +49,7 @@ class TabsView extends HTMLElement {
 
         .tab-list{
           display:flex; gap:8px; padding:10px;
-          background:rgba(0,0,0,.34);
+          background:rgba(0,0,0,.84);
         }
         .tabs.vertical .tab-list{
           flex-direction:column; min-width:160px;
