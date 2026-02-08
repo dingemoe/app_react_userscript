@@ -37,14 +37,17 @@ class NavFinder extends HTMLElement {
         .sidebar { width: 200px; border-right: 1px solid #ccc; padding: 10px; }
         .item { cursor: pointer; padding: 8px; border-radius: 4px; }
         .item.active { background: #007bff; color: white; }
-      </style>
+        .wrapper { display: flex; flex-direction: column; gap: 5px; background: #f9f9f9; padding: 10px; border-radius: 4px; }      
+        </style>
       <div class="sidebar">
+        <div class="wrapper">
         ${this._items.map(item => `
           <div class="item ${this._selectedIds.has(item.id) ? 'active' : ''}" 
                data-id="${item.id}">
             ${item.label}
           </div>
         `).join('')}
+        </div>
       </div>
     `;
 
