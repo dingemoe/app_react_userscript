@@ -1,5 +1,6 @@
-// dial-panel + tabs-view (ALL DARK) + dial shows "✕" when expanded
+// dial-panel + tabs-view (ALL DARK) + fixed dial + ✕ on open + fuzzy pop + orbiting border ring
 
+// ---------- TabsView ----------
 class TabsView extends HTMLElement {
   static get observedAttributes() { return ['orientation', 'active-id']; }
   constructor(){ super(); this.attachShadow({mode:'open'}); this._tabs=[]; this._activeId=null; }
@@ -19,21 +20,45 @@ class TabsView extends HTMLElement {
     this.shadowRoot.innerHTML=`
       <style>
         :host{display:block;height:100%}
-        .tabs{display:flex;gap:10px;border:1px solid rgba(255,255,255,.10);border-radius:12px;overflow:hidden;height:100%;
-          background:rgba(255,255,255,.03)}
+        .tabs{
+          display:flex;gap:10px;height:100%;
+          border:1px solid rgba(255,255,255,.10);
+          border-radius:14px; overflow:hidden;
+          background:rgba(255,255,255,.03);
+        }
         .tabs.vertical{flex-direction:row}
         .tabs.horizontal{flex-direction:column}
-        .tab-list{display:flex;gap:8px;padding:10px;background:rgba(255,255,255,.04)}
-        .tabs.vertical .tab-list{flex-direction:column;min-width:160px;border-right:1px solid rgba(255,255,255,.10)}
-        .tabs.horizontal .tab-list{flex-direction:row;border-bottom:1px solid rgba(255,255,255,.10)}
+        .tab-list{
+          display:flex;gap:8px;padding:10px;
+          background:rgba(255,255,255,.04);
+        }
+        .tabs.vertical .tab-list{
+          flex-direction:column;min-width:160px;
+          border-right:1px solid rgba(255,255,255,.10)
+        }
+        .tabs.horizontal .tab-list{
+          flex-direction:row;border-bottom:1px solid rgba(255,255,255,.10)
+        }
         .tab-btn{
-          cursor:pointer;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.08);
-          background:rgba(0,0,0,.10);text-align:left;color:rgba(255,255,255,.9)
+          cursor:pointer;padding:10px 12px;border-radius:10px;
+          border:1px solid rgba(255,255,255,.08);
+          background:rgba(0,0,0,.10);
+          text-align:left;color:rgba(255,255,255,.9);
+          transition: background .15s ease, border-color .15s ease, transform .08s ease;
         }
         .tab-btn:hover{background:rgba(255,255,255,.06)}
-        .tab-btn.active{background:rgba(31,111,235,.9);border-color:rgba(31,111,235,.9);color:#fff}
-        .tab-content{flex:1;padding:14px;background:rgba(0,0,0,.18);color:rgba(255,255,255,.92);overflow:auto}
-        .tab-content :is(p,div,span,pre,code,li){color:inherit}
+        .tab-btn:active{transform:translateY(1px)}
+        .tab-btn.active{
+          background:rgba(31,111,235,.92);
+          border-color:rgba(31,111,235,.92);
+          color:#fff;
+        }
+        .tab-content{
+          flex:1;padding:14px;overflow:auto;
+          background:rgba(0,0,0,.18);
+          color:rgba(255,255,255,.92);
+        }
+        .tab-content :is(p,div,span,pre,code,li,a){color:inherit}
       </style>
       <div class="tabs ${o}">
         <div class="tab-list" role="tablist">
@@ -49,51 +74,135 @@ class TabsView extends HTMLElement {
 }
 customElements.define('tabs-view', TabsView);
 
+// ---------- DialPanel ----------
 class DialPanel extends HTMLElement {
   constructor(){
     super(); this.attachShadow({mode:'open'}); this._open=false;
-    this._cfg={ button:{icon:'☰', closeIcon:'✕'}, position:{bottom:14,right:14}, size:{btn:56,panelW:520,panelH:360},
-      tabs:[], onToggle:null, onAction:null, title:'Panel' };
+    this._cfg={
+      button:{ icon:'☰', closeIcon:'✕' },
+      position:{ bottom:14, right:14 },
+      size:{ btn:56, panelW:520, panelH:360 },
+      tabs:[],
+      title:'Panel',
+      onToggle:null,
+      onAction:null
+    };
   }
   connectedCallback(){ if(!this.shadowRoot.innerHTML) this.render(); }
   setup(cfg={}){ this._cfg=this._merge(this._cfg,cfg);
     if(!this._cfg.tabs?.length) this._cfg.tabs=[{id:'main',label:'Main',content:''}];
     this.render(); return this; }
-  toggle(force){ this._open=typeof force==='boolean'?force:!this._open; this.render();
+
+  // internal toggle (no animation orchestration here)
+  _setOpen(v){
+    this._open=!!v;
+    this.render();
     this._cfg.onToggle?.(this._open);
-    this.dispatchEvent(new CustomEvent('toggle',{detail:{open:this._open}})); }
+    this.dispatchEvent(new CustomEvent('toggle',{detail:{open:this._open}}));
+  }
 
   render(){
-    const {button,position,size,tabs,title}=this._cfg; const open=this._open;
+    const {button,position,size,tabs,title}=this._cfg;
+    const open=this._open;
     const dialIcon = open ? (button.closeIcon || '✕') : (button.icon || '☰');
 
     this.shadowRoot.innerHTML=`
       <style>
-        :host{z-index:2147483647;font-family:system-ui}
+        :host{ z-index:2147483647; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial }
+
+        @keyframes tmPopIn{
+          0%{opacity:0; transform:translateY(10px) scale(.985); filter:blur(10px) saturate(1.2)}
+          100%{opacity:1; transform:translateY(0) scale(1); filter:blur(0) saturate(1)}
+        }
+        @keyframes tmPopOut{
+          0%{opacity:1; transform:translateY(0) scale(1); filter:blur(0)}
+          100%{opacity:0; transform:translateY(10px) scale(.985); filter:blur(10px)}
+        }
+        @keyframes tmSweep{
+          0%{ transform:translate(-50%,-50%) rotate(0deg) }
+          100%{ transform:translate(-50%,-50%) rotate(360deg) }
+        }
+
         .dial{
           position:fixed; right:${position.right}px; bottom:${position.bottom}px;
           width:${size.btn}px;height:${size.btn}px;border-radius:999px;
-          border:1px solid rgba(255,255,255,.16);background:rgba(20,20,20,.82);color:#fff;
+          border:1px solid rgba(255,255,255,.16);
+          background:rgba(20,20,20,.82); color:#fff;
           display:grid;place-items:center;cursor:pointer;
           box-shadow:0 12px 40px rgba(0,0,0,.55);
           backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+          transition: transform .12s ease, box-shadow .2s ease, filter .2s ease, background .2s ease;
         }
-        .dial:hover{background:rgba(30,30,30,.88)}
+        .dial:hover{ background:rgba(28,28,28,.88); }
+        .dial:active{ transform:translateY(1px) scale(.98); }
+        .dial.pulse{
+          filter: brightness(1.15);
+          box-shadow:0 16px 50px rgba(0,0,0,.65);
+        }
+
         .panel{
-          position:fixed; right:${position.right}px; bottom:${position.bottom+size.btn+10}px;
+          position:fixed; right:${position.right}px;
+          bottom:${position.bottom + size.btn + 10}px;
           width:${size.panelW}px;height:${size.panelH}px;border-radius:18px;
-          border:1px solid rgba(255,255,255,.12);background:rgba(18,18,18,.82);color:#fff;
-          box-shadow:0 22px 80px rgba(0,0,0,.65);overflow:hidden;
+          border:1px solid rgba(255,255,255,.12);
+          background:rgba(18,18,18,.82); color:#fff;
+          box-shadow:0 22px 80px rgba(0,0,0,.65);
+          overflow:hidden;
           backdrop-filter: blur(12px);-webkit-backdrop-filter: blur(12px);
+          transform-origin: 85% 100%;
+          animation: tmPopIn .22s ease forwards;
         }
+        .panel.closing{ animation: tmPopOut .20s ease forwards; }
+
+        /* fuzzy bloom */
+        .panel::before{
+          content:"";
+          position:absolute; inset:-18px;
+          border-radius:22px;
+          background:
+            radial-gradient(closest-side, rgba(31,111,235,.18), transparent 70%),
+            radial-gradient(closest-side, rgba(255,255,255,.08), transparent 65%);
+          filter: blur(18px);
+          opacity:.85;
+          pointer-events:none;
+        }
+
+        /* orbit border ring */
+        .panel::after{
+          content:"";
+          position:absolute; left:50%; top:50%;
+          width:140%; height:140%;
+          border-radius:999px;
+          background:
+            conic-gradient(
+              from 0deg,
+              transparent 0 320deg,
+              rgba(31,111,235,0) 320deg 336deg,
+              rgba(31,111,235,.85) 336deg 352deg,
+              rgba(255,255,255,.65) 352deg 360deg
+            );
+          animation: tmSweep 2.2s linear infinite;
+          opacity:.9;
+          pointer-events:none;
+          -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
+          mix-blend-mode: screen;
+        }
+
         .panelHeader{
-          display:flex;align-items:center;justify-content:space-between;padding:12px 14px;
-          border-bottom:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04)
+          display:flex;align-items:center;justify-content:space-between;
+          padding:12px 14px;
+          border-bottom:1px solid rgba(255,255,255,.10);
+          background:rgba(255,255,255,.04);
+          position:relative;
         }
         .title{font-size:12px;opacity:.92;letter-spacing:.2px}
         .close{
-          width:34px;height:28px;border-radius:10px;border:1px solid rgba(255,255,255,.14);
-          background:rgba(0,0,0,.15);color:#fff;cursor:pointer
+          width:34px;height:28px;border-radius:10px;
+          border:1px solid rgba(255,255,255,.14);
+          background:rgba(0,0,0,.15);
+          color:#fff; cursor:pointer;
+          transition: background .15s ease;
         }
         .close:hover{background:rgba(255,255,255,.06)}
         tabs-view{display:block;height:calc(100% - 53px)}
@@ -114,13 +223,34 @@ class DialPanel extends HTMLElement {
     const $dial=this.shadowRoot.querySelector('.dial');
     const $close=this.shadowRoot.querySelector('.close');
     const $tabs=this.shadowRoot.querySelector('tabs-view');
+    const $panel=this.shadowRoot.querySelector('.panel');
 
-    $dial.onclick=()=>{ this._cfg.onAction?.({type:'click',detail:{target:'dial',open:!open}}); this.toggle(); };
-    $close?.addEventListener('click',()=>{ this._cfg.onAction?.({type:'click',detail:{target:'close'}}); this.toggle(false); });
+    const pulse=()=>{
+      $dial.classList.add('pulse');
+      setTimeout(()=> $dial && $dial.classList.remove('pulse'), 160);
+    };
+
+    const openNow=()=>{
+      pulse();
+      this._cfg.onAction?.({type:'click',detail:{target:'dial',open:true}});
+      this._setOpen(true);
+    };
+
+    const closeNow=()=>{
+      pulse();
+      this._cfg.onAction?.({type:'click',detail:{target:'dial',open:false}});
+      if($panel){
+        $panel.classList.add('closing');
+        setTimeout(()=> this._setOpen(false), 180);
+      } else this._setOpen(false);
+    };
+
+    $dial.onclick=()=> open ? closeNow() : openNow();
+    $close?.addEventListener('click', closeNow);
 
     if($tabs){
       $tabs.tabs=tabs;
-      $tabs.activeId=$tabs.activeId??tabs?.[0]?.id??null;
+      $tabs.activeId=$tabs.activeId ?? tabs?.[0]?.id ?? null;
       $tabs.addEventListener('tabChange',e=>{
         this._cfg.onAction?.({type:'tabChange',detail:e.detail});
         this.dispatchEvent(new CustomEvent('action',{detail:{type:'tabChange',...e.detail}}));
@@ -128,9 +258,13 @@ class DialPanel extends HTMLElement {
     }
   }
 
-  _merge(a,b){ const o={...a}; for(const k in (b||{})){ const v=b[k];
-    o[k]=v&&typeof v==='object'&&!Array.isArray(v)?this._merge(a[k]||{},v):v; } return o; }
+  _merge(a,b){
+    const o={...a};
+    for(const k in (b||{})){
+      const v=b[k];
+      o[k]=v && typeof v==='object' && !Array.isArray(v) ? this._merge(a[k]||{},v) : v;
+    }
+    return o;
+  }
 }
 customElements.define('dial-panel', DialPanel);
-
-/* Konklusjon: Alt er mørkt (inkl tabs), og dial-knappen viser ✕ når panelet er åpent. */
