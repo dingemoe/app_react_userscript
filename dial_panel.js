@@ -197,18 +197,7 @@ class DialPanel extends HTMLElement {
         }
         .panel.closing{ animation: tmPopOut .20s ease forwards; }
 
-        /* fuzzy bloom (NO orbit ring, NO white) */
-        .panel::before{
-          content:"";
-          position:absolute; inset:-20px;
-          border-radius:22px;
-          background:
-            radial-gradient(closest-side, rgba(31,111,235,.20), transparent 72%),
-            radial-gradient(closest-side, rgba(0,0,0,.92), transparent 68%);
-          filter: blur(20px);
-          opacity:.95;
-          pointer-events:none;
-        }
+        /* fuzzy bloom removed */
 
         .panelHeader{
           display:flex; align-items:center; justify-content:space-between;
