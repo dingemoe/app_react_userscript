@@ -192,7 +192,7 @@ class DialPanel extends HTMLElement {
           width:${size.panelW}px; height:${size.panelH}px;
           border-radius:18px;
           border:1px solid rgba(255,255,255,.12);
-          background:rgba(9,10,12,.90);   /* mørk panelbase */
+          background:black !important;   /* mørk panelbase */
           color:#fff;
           box-shadow:0 22px 90px rgba(0,0,0,.80);
           overflow:hidden;
