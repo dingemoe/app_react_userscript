@@ -1,60 +1,100 @@
-class NavFinder extends HTMLElement {
-  static get observedAttributes() { return ['multiselect']; }
+class TabsView extends HTMLElement {
+  static get observedAttributes() { return ['orientation', 'active-id']; }
 
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this._items = [];
-    this._selectedIds = new Set();
+    this._tabs = [];
+    this._activeId = null;
   }
 
-  // Input data via setter
-  set items(value) {
-    this._items = value;
+  set tabs(value) {
+    this._tabs = Array.isArray(value) ? value : [];
+    if (this._tabs.length && this._activeId == null) {
+      this._activeId = this._tabs[0].id;
+    }
     this.render();
   }
 
-  attributeChangedCallback() { this.render(); }
+  get activeId() {
+    return this._activeId;
+  }
 
-  toggleSelect(id) {
-    const isMulti = this.hasAttribute('multiselect');
-    if (!isMulti) this._selectedIds.clear();
-    
-    this._selectedIds.has(id) ? this._selectedIds.delete(id) : this._selectedIds.add(id);
-    
+  set activeId(value) {
+    this._activeId = value;
+    this.setAttribute('active-id', String(value));
     this.render();
-    this.dispatchEvent(new CustomEvent('selectionChange', {
-      detail: { 
-        selectedIds: Array.from(this._selectedIds),
-        items: this._items.filter(i => this._selectedIds.has(i.id))
-      }
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (oldValue === newValue) return;
+    if (name === 'active-id') {
+      const parsed = Number(newValue);
+      this._activeId = Number.isNaN(parsed) ? newValue : parsed;
+    }
+    this.render();
+  }
+
+  get orientation() {
+    return this.getAttribute('orientation') || 'vertical';
+  }
+
+  set orientation(value) {
+    this.setAttribute('orientation', value || 'vertical');
+  }
+
+  onSelect(id) {
+    this._activeId = id;
+    this.render();
+    const tab = this._tabs.find(t => t.id === id) || null;
+    this.dispatchEvent(new CustomEvent('tabChange', {
+      detail: { activeId: id, tab }
     }));
   }
 
   render() {
+    const orientation = this.orientation === 'horizontal' ? 'horizontal' : 'vertical';
+    const activeId = this._activeId;
+
+    const content = this._tabs.find(t => t.id === activeId);
+    const contentHtml = content ? (content.content ?? '') : '';
+
     this.shadowRoot.innerHTML = `
       <style>
-        .sidebar { width: 200px; border-right: 1px solid #ccc; padding: 10px; }
-        .item { cursor: pointer; padding: 8px; border-radius: 4px; }
-        .item.active { background: #007bff; color: white; }
-        .wrapper { display: flex; flex-direction: column; gap: 5px; background: #f9f9f9; padding: 10px; border-radius: 4px; }      
-        </style>
-      <div class="sidebar">
-        <div class="wrapper">
-        ${this._items.map(item => `
-          <div class="item ${this._selectedIds.has(item.id) ? 'active' : ''}" 
-               data-id="${item.id}">
-            ${item.label}
-          </div>
-        `).join('')}
+        :host { display: block; }
+        .tabs { display: flex; gap: 8px; border: 1px solid #d0d0d0; border-radius: 6px; overflow: hidden; }
+        .tabs.vertical { flex-direction: row; }
+        .tabs.horizontal { flex-direction: column; }
+        .tab-list { display: flex; gap: 6px; padding: 8px; background: #f6f6f6; }
+        .tabs.vertical .tab-list { flex-direction: column; min-width: 160px; border-right: 1px solid #e0e0e0; }
+        .tabs.horizontal .tab-list { flex-direction: row; border-bottom: 1px solid #e0e0e0; }
+        .tab-btn { cursor: pointer; padding: 8px 10px; border-radius: 4px; border: 1px solid transparent; background: transparent; text-align: left; }
+        .tab-btn.active { background: #1f6feb; color: #fff; }
+        .tab-content { flex: 1; padding: 12px; background: #fff; }
+      </style>
+      <div class="tabs ${orientation}">
+        <div class="tab-list" role="tablist">
+          ${this._tabs.map(t => `
+            <button class="tab-btn ${t.id === activeId ? 'active' : ''}" data-id="${t.id}" role="tab" aria-selected="${t.id === activeId}">
+              ${t.label}
+            </button>
+          `).join('')}
+        </div>
+        <div class="tab-content" role="tabpanel">
+          ${contentHtml}
         </div>
       </div>
     `;
 
-    this.shadowRoot.querySelectorAll('.item').forEach(el => {
-      el.onclick = () => this.toggleSelect(Number(el.dataset.id));
+    this.shadowRoot.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.onclick = () => this.onSelect(this.parseId(btn.dataset.id));
     });
+  }
+
+  parseId(value) {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? value : parsed;
   }
 }
 
-customElements.define('nav-finder', NavFinder);
+customElements.define('tabs-view', TabsView);
