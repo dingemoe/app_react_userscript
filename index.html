@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Strict Dark - Pure CSS Blue Glass Edition</title>
+    <style>
+      /* --- CORE STYLES --- */
+      :root {
+        --bg-color: #f8f9fa;
+        --text-dark: #1a1a1b;
+        --blue-accent: #3b82f6;
+        --glass-bg: rgba(13, 13, 17, 0.96);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --transition-speed: 0.25s;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-dark);
+        min-height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* --- LANDING PAGE --- */
+      .hero { text-align: center; }
+      .hero h1 { font-size: 80px; font-weight: 900; letter-spacing: -0.05em; line-height: 1; margin-bottom: 16px; }
+      .hero p { font-size: 18px; color: rgba(26, 26, 27, 0.4); }
+
+      /* --- THE DIAL SYSTEM (PURE CSS) --- */
+      #dial-toggle { display: none; }
+
+      .dial-button {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        border: 1px solid var(--glass-border);
+        background: #08080a;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 24px;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+        z-index: 3000;
+        transition: transform 0.2s, background 0.2s;
+        user-select: none;
+      }
+
+      .dial-button:hover { background: #121215; transform: scale(1.05); }
+      .dial-button:active { transform: scale(0.95); }
+
+      /* Icons toggle */
+      .icon-open { display: block; }
+      .icon-close { display: none; }
+
+      #dial-toggle:checked ~ .dial-button .icon-open { display: none; }
+      #dial-toggle:checked ~ .dial-button .icon-close { display: block; }
+
+      /* --- BLUE GLASS ORB PANEL --- */
+      .panel-container {
+        position: fixed;
+        right: 24px;
+        bottom: 92px;
+        width: 520px;
+        height: 380px;
+        z-index: 2000;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(10px) scale(0.985);
+        transform-origin: 90% 100%;
+        transition: opacity var(--transition-speed) ease, 
+                    transform var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1), 
+                    visibility var(--transition-speed);
+      }
+
+      #dial-toggle:checked ~ .panel-container {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0) scale(1);
+      }
+
+      .glass-panel-orb {
+        width: 100%;
+        height: 100%;
+        backdrop-filter: blur(32px);
+        -webkit-backdrop-filter: blur(32px);
+        background: 
+          radial-gradient(circle at 75% 15%, rgba(59, 130, 246, 0.18) 0%, transparent 65%),
+          radial-gradient(circle at 25% 85%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+          var(--glass-bg);
+        box-shadow: 
+          0 40px 100px rgba(0, 0, 0, 0.6),
+          inset 0 0 20px rgba(59, 130, 246, 0.05);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        color: white;
+      }
+
+      .panel-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .panel-title {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.6);
+        letter-spacing: 0.2em;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+
+      .close-overlay {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        transition: 0.2s;
+      }
+
+      .close-overlay:hover { background: rgba(255, 255, 255, 0.15); color: white; }
+
+      /* --- TAB SYSTEM (PURE CSS) --- */
+      .panel-body { flex: 1; display: flex; overflow: hidden; }
+
+      .sidebar {
+        width: 160px;
+        padding: 12px;
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .tab-label {
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        background: rgba(255, 255, 255, 0.03);
+        color: rgba(255, 255, 255, 0.4);
+        text-align: left;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+
+      .tab-label:hover { background: rgba(255, 255, 255, 0.08); color: white; }
+
+      .tab-radio { display: none; }
+
+      .content-area { flex: 1; padding: 24px; overflow-y: auto; text-align: left; position: relative; }
+      .tab-content { display: none; animation: tmPopIn 0.3s ease; }
+
+      /* CSS Rules for active tabs */
+      #tab1:checked ~ .panel-body .sidebar label[for="tab1"],
+      #tab2:checked ~ .panel-body .sidebar label[for="tab2"],
+      #tab3:checked ~ .panel-body .sidebar label[for="tab3"] {
+        background: #1a4db4;
+        border-color: rgba(96, 165, 250, 0.3);
+        color: white;
+        box-shadow: 0 8px 24px rgba(32, 100, 210, 0.5);
+      }
+
+      #tab1:checked ~ .panel-body .content-area #content1,
+      #tab2:checked ~ .panel-body .content-area #content2,
+      #tab3:checked ~ .panel-body .content-area #content3 {
+        display: block;
+      }
+
+      /* Content Styling */
+      .tab-content h3 { font-size: 20px; font-weight: bold; color: var(--blue-accent); margin-bottom: 12px; }
+      .tab-content p { font-size: 13px; color: rgba(255, 255, 255, 0.5); line-height: 1.4; }
+
+      .stat-grid { display: flex; gap: 12px; margin-top: 20px; }
+      .stat-card { flex: 1; background: rgba(255,255,255,0.03); padding: 16px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); }
+      .stat-card .label { fontSize: 10px; color: rgba(255,255,255,0.3); fontWeight: bold; marginBottom: 4px; text-transform: uppercase; }
+      .stat-card .value { fontSize: 24px; fontWeight: bold; color: #4285f4; }
+
+      /* --- ANIMATION KEYFRAMES --- */
+      @keyframes tmPopIn {
+        0% { opacity: 0; transform: translateY(5px); filter: blur(10px); }
+        100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+      }
+
+      /* --- SCROLLBAR --- */
+      ::-webkit-scrollbar { width: 4px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.4"
+  }
+}
+</script>
+</head>
+  <body>
+    <!-- Background Hero -->
+    <div class="hero">
+      <h1>Strict Dark</h1>
+      <p>Pure CSS Glass Orb UI Interface</p>
+    </div>
+
+    <!-- Toggle Mechanism -->
+    <input type="checkbox" id="dial-toggle">
+    
+    <!-- Tab Mechanism -->
+    <input type="radio" name="tabs" id="tab1" class="tab-radio" checked>
+    <input type="radio" name="tabs" id="tab2" class="tab-radio">
+    <input type="radio" name="tabs" id="tab3" class="tab-radio">
+
+    <!-- The Dial Button -->
+    <label for="dial-toggle" class="dial-button">
+      <span class="icon-open">☰</span>
+      <span class="icon-close">✕</span>
+    </label>
+
+    <!-- The Panel -->
+    <div class="panel-container">
+      <div class="glass-panel-orb">
+        <div class="panel-header">
+          <div class="panel-title">Control Center</div>
+          <label for="dial-toggle" class="close-overlay">✕</label>
+        </div>
+
+        <div class="panel-body">
+          <div class="sidebar">
+            <label for="tab1" class="tab-label">Dashboard</label>
+            <label for="tab2" class="tab-label">Preferences</label>
+            <label for="tab3" class="tab-label">About</label>
+          </div>
+
+          <div class="content-area">
+            <!-- Tab 1: Dashboard -->
+            <div id="content1" class="tab-content">
+              <h3>System Status</h3>
+              <p>All core modules are performing within optimal parameters.</p>
+              <div class="stat-grid">
+                <div class="stat-card">
+                  <div class="label">CPU</div>
+                  <div class="value">14.2%</div>
+                </div>
+                <div class="stat-card">
+                  <div class="label">Memory</div>
+                  <div class="value">3.4GB</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab 2: Preferences -->
+            <div id="content2" class="tab-content">
+              <h3>Preferences</h3>
+              <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
+                <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                  <div style="font-size: 12px;">Dark Mode</div>
+                  <div style="font-size: 10px; color: rgba(255,255,255,0.3);">Enabled by default</div>
+                </div>
+                <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                  <div style="font-size: 12px;">Auto-update</div>
+                  <div style="font-size: 10px; color: rgba(255,255,255,0.3);">Checking every 5m</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab 3: About -->
+            <div id="content3" class="tab-content">
+              <div style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding-top: 20px;">
+                <div style="width: 60px; height: 60px; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); border-radius: 18px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                   <span style="font-size: 24px; color: #3b82f6;">❖</span>
+                </div>
+                <h4 style="font-weight: bold; font-size: 18px;">STRICT DARK</h4>
+                <p style="max-width: 200px; font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 8px;">A high-fidelity minimalist system utility interface.</p>
+                <p style="font-size: 10px; color: rgba(255,255,255,0.1); margin-top: 20px;">Version 2.5.0-Glass</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

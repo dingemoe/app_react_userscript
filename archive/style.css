@@ -1,0 +1,52 @@
+
+@keyframes tmPopIn {
+  0% { opacity: 0; transform: translateY(10px) scale(0.985); filter: blur(20px) saturate(1.2); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0) saturate(1); }
+}
+
+@keyframes tmPopOut {
+  0% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  100% { opacity: 0; transform: translateY(10px) scale(0.985); filter: blur(20px); }
+}
+
+@keyframes tmPulse {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(1.2); transform: scale(0.98); }
+  100% { filter: brightness(1); }
+}
+
+.animate-pop-in {
+  animation: tmPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pop-out {
+  animation: tmPopOut 0.20s ease forwards;
+}
+
+.animate-dial-pulse {
+  animation: tmPulse 0.16s ease;
+}
+
+/* The "Cool Blue Glass" Orb Effect */
+.glass-panel-orb {
+  backdrop-filter: blur(32px);
+  background: 
+    radial-gradient(circle at 75% 15%, rgba(59, 130, 246, 0.18) 0%, transparent 65%),
+    radial-gradient(circle at 25% 85%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+    rgba(13, 13, 17, 0.96);
+  box-shadow: 
+    0 40px 100px rgba(0, 0, 0, 0.6),
+    inset 0 0 20px rgba(59, 130, 246, 0.05);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
