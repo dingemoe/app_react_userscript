@@ -19,7 +19,7 @@ class TabsView extends HTMLElement {
     const html=c?(c.content??''):'';
     this.shadowRoot.innerHTML=`
       <style>
-        :host{display:block;height:100%}
+        :host{display:block;height:100%;background:black;color:white;}
         .tabs{
           display:flex;gap:10px;height:100%;
           border:1px solid rgba(255,255,255,.10);
