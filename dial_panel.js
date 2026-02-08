@@ -1,4 +1,4 @@
-// dial-panel + tabs-view (STRICT DARK: ingen lyse flater) + fixed dial + ✕ on open + fuzzy pop + orbit ring
+// dial-panel + tabs-view (STRICT DARK) + fixed dial + ✕ on open + fuzzy pop (NO ORBIT RING)
 
 // ---------- TabsView ----------
 class TabsView extends HTMLElement {
@@ -87,12 +87,10 @@ class TabsView extends HTMLElement {
           flex:1;
           padding:14px;
           overflow:auto;
-          background:rgba(0,0,0,.62);   /* <-- mørk, ikke hvit */
+          background:rgba(0,0,0,.62);
           color:rgba(255,255,255,.92);
         }
-        .tab-content :is(p,div,span,pre,code,li,a){
-          color:inherit;
-        }
+        .tab-content :is(p,div,span,pre,code,li,a){ color:inherit; }
       </style>
 
       <div class="tabs ${o}">
@@ -160,16 +158,12 @@ class DialPanel extends HTMLElement {
           0%{opacity:1; transform:translateY(0) scale(1); filter:blur(0)}
           100%{opacity:0; transform:translateY(10px) scale(.985); filter:blur(10px)}
         }
-        @keyframes tmSweep{
-          0%{ transform:translate(-50%,-50%) rotate(0deg) }
-          100%{ transform:translate(-50%,-50%) rotate(360deg) }
-        }
 
         .dial{
           position:fixed; right:${position.right}px; bottom:${position.bottom}px;
           width:${size.btn}px; height:${size.btn}px; border-radius:999px;
           border:1px solid rgba(255,255,255,.16);
-          background:rgba(8,8,10,.86);  /* mørkere */
+          background:rgba(8,8,10,.86);
           color:#fff;
           display:grid; place-items:center;
           cursor:pointer;
@@ -192,7 +186,7 @@ class DialPanel extends HTMLElement {
           width:${size.panelW}px; height:${size.panelH}px;
           border-radius:18px;
           border:1px solid rgba(255,255,255,.12);
-          background:black !important;   /* mørk panelbase */
+          background:#000 !important;
           color:#fff;
           box-shadow:0 22px 90px rgba(0,0,0,.80);
           overflow:hidden;
@@ -203,46 +197,24 @@ class DialPanel extends HTMLElement {
         }
         .panel.closing{ animation: tmPopOut .20s ease forwards; }
 
-        /* fuzzy bloom (kun mørke + blå, ingen hvit) */
+        /* fuzzy bloom (NO orbit ring, NO white) */
         .panel::before{
           content:"";
           position:absolute; inset:-20px;
           border-radius:22px;
           background:
-            radial-gradient(closest-side, rgba(31,111,235,.22), transparent 70%),
-            radial-gradient(closest-side, rgba(0,0,0,.85), transparent 68%);
+            radial-gradient(closest-side, rgba(31,111,235,.20), transparent 72%),
+            radial-gradient(closest-side, rgba(0,0,0,.92), transparent 68%);
           filter: blur(20px);
           opacity:.95;
           pointer-events:none;
-        }
-
-        /* orbit border ring (ingen hvit highlight) */
-        .panel::after{
-          content:"";
-          position:absolute; left:50%; top:50%;
-          width:140%; height:140%;
-          border-radius:999px;
-          background:
-            conic-gradient(
-              from 0deg,
-              transparent 0 326deg,
-              rgba(31,111,235,0) 326deg 340deg,
-              rgba(31,111,235,.95) 340deg 352deg,
-              rgba(31,111,235,.25) 352deg 360deg
-            );
-          animation: tmSweep 2.2s linear infinite;
-          opacity:.95;
-          pointer-events:none;
-          -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
-          mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
-          mix-blend-mode: screen;
         }
 
         .panelHeader{
           display:flex; align-items:center; justify-content:space-between;
           padding:12px 14px;
           border-bottom:1px solid rgba(255,255,255,.10);
-          background:rgba(0,0,0,.32);   /* mørk header */
+          background:rgba(0,0,0,.32);
           position:relative;
         }
         .title{ font-size:12px; opacity:.92; letter-spacing:.2px }
@@ -263,7 +235,7 @@ class DialPanel extends HTMLElement {
         tabs-view{
           display:block;
           height:calc(100% - 53px);
-          background:#0b0c10; /* hard mørk bak */
+          background:#0b0c10;
         }
       </style>
 
@@ -328,4 +300,4 @@ class DialPanel extends HTMLElement {
 }
 customElements.define('dial-panel', DialPanel);
 
-/* Konklusjon: Alle flater er mørke (tabs-list + content + header + panel), og orbit/fuzzy bruker ikke hvite highlights. */
+// Konklusjon: Orbit-ring (roterende effekt) er fjernet; panelet er fortsatt strict dark + fuzzy pop.
